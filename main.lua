@@ -1,23 +1,48 @@
-local controlleftalt = {
-	SELECT = "return",
-	CANCEL = "lshift",
-	MENU = "lctrl"
-}
-local controlrightalt = {
-	SELECT = "kpenter",
-	CANCEL = "rshift",
-	MENU = "rctrl"
-}
+local controlleftalt
+local controlrightalt
 
-CONTROLS = {
-	LEFT = "left",
-	RIGHT = "right",
-	UP = "up",
-	DOWN = "down",
-	SELECT = "z",
-	CANCEL = "x",
-	MENU = "c"
-}
+if love.system.getOS() == "Wii" then
+	controlleftalt = {
+		SELECT = "2",
+		CANCEL = "1",
+		MENU = "plus"
+	}
+	controlrightalt = {
+		SELECT = "a",
+		CANCEL = "b",
+		MENU = "home"
+	}
+	CONTROLS = {
+		LEFT = "left",
+		RIGHT = "right",
+		UP = "up",
+		DOWN = "down",
+		SELECT = "z",
+		CANCEL = "x",
+		MENU = "c"
+	}
+else
+	controlleftalt = {
+		SELECT = "return",
+		CANCEL = "lshift",
+		MENU = "lctrl"
+	}
+	controlrightalt = {
+		SELECT = "kpenter",
+		CANCEL = "rshift",
+		MENU = "rctrl"
+	}
+
+	CONTROLS = {
+		LEFT = "left",
+		RIGHT = "right",
+		UP = "up",
+		DOWN = "down",
+		SELECT = "z",
+		CANCEL = "x",
+		MENU = "c"
+	}
+end
 
 local pressed = {
 	LEFT = false,
@@ -42,7 +67,7 @@ local music = {}
 
 TIME = 0
 
-DEBUG = true
+DEBUG = false
 
 function CLEARCACHE()
 	images = {}
@@ -119,12 +144,24 @@ function MUSIC(path)
 	return music[path]
 end
 
-function ISDOWN(id)
-	return (controlleftalt[id] and love.keyboard.isDown(controlleftalt[id])) or (controlrightalt[id] and love.keyboard.isDown(controlrightalt[id])) or love.keyboard.isDown(CONTROLS[id])
+function ISDOWN(id,joystick)
+	joystick = joystick or 1
+	if love.system.getOS() == "Wii" then
+		local wiimote = love.wiimote.getWiimote(joystick)
+		return (controlleftalt[id] and wiimote:isDown(controlleftalt[id])) or (controlrightalt[id] and wiimote:isDown(controlrightalt[id])) or wiimote:isDown(CONTROLS[id])
+	else
+		return (controlleftalt[id] and love.keyboard.isDown(controlleftalt[id])) or (controlrightalt[id] and love.keyboard.isDown(controlrightalt[id])) or love.keyboard.isDown(CONTROLS[id])
+	end
 end
 
-function ISPRESSED(id)
-	return not pressed[id] and ((controlleftalt[id] and love.keyboard.isDown(controlleftalt[id])) or (controlrightalt[id] and love.keyboard.isDown(controlrightalt[id])) or love.keyboard.isDown(CONTROLS[id]))
+function ISPRESSED(id, joystick)
+	joystick = joystick or 1
+	if love.system.getOS() == "Wii" then
+		local wiimote = love.wiimote.getWiimote(joystick)
+		return not pressed[id] and ((controlleftalt[id] and wiimote:isDown(controlleftalt[id])) or (controlrightalt[id] and wiimote:isDown(controlrightalt[id])) or wiimote:isDown(CONTROLS[id]))
+	else
+		return not pressed[id] and ((controlleftalt[id] and love.keyboard.isDown(controlleftalt[id])) or (controlrightalt[id] and love.keyboard.isDown(controlrightalt[id])) or love.keyboard.isDown(CONTROLS[id]))
+	end
 end
 
 local scenestack = {}
