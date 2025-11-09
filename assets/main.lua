@@ -5,16 +5,24 @@ local debugoptions = 0
 local minopiton = 1
 local translatey = 0
 local brightnesstimer = 0
+local function loadDebugFilesFromPath(path)
+    local items = love.filesystem.getDirectoryItems(path)
+    for _,item in pairs(items) do
+        local fullpath = path.."/"..item
+        if love.filesystem.getInfo(fullpath, "directory") then
+            loadDebugFilesFromPath(fullpath)
+        elseif item:sub(-4) == ".lua" then
+            local requirepath = fullpath:gsub("/", "."):sub(1, -5)
+            scripts[#scripts+1] = "*"..requirepath
+            debugoptions = debugoptions + 1
+        end
+    end
+end
 local function reloadFiles()
     CLEARCACHE()
-    scripts = {
-        "*assets.scenes.battle",
-        "*assets.scenes.game_over",
-        "*assets.scripts.samplebattle",
-        "*assets.scripts.triobattle",
-		"*assets.scripts.menulessbattle",
-        "*assets.scripts.sixbattle",
-    }
+    scripts = {}
+    loadDebugFilesFromPath("assets/scenes")
+    loadDebugFilesFromPath("assets/scripts")
     debugoptions = #scripts
     files = love.filesystem.getDirectoryItems("mods")
     for index, value in ipairs(files) do
@@ -27,8 +35,20 @@ local function reloadFiles()
         option = minopiton
     end
 end
+local function showBoldText(text, x, y)
+    love.graphics.print(text, x, y)
+    love.graphics.print(text, x + 6, y)
+    love.graphics.print(text, x + 3, y - 3)
+    love.graphics.print(text, x + 3, y + 3)
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.print(text, x + 3, y)
+end
 reloadFiles()
-option = 1 + debugoptions
+if not DEBUG then
+    option = 1 + debugoptions
+else
+    option = 1
+end
 if #files == 0 then
 	option = 2
 end
@@ -76,26 +96,21 @@ SETSCENE({
         if ISPRESSED "SELECT" then
             love.graphics.clear(0, 0, 0)
             love.graphics.setFont(FONT "fnt_karma_big")
-            love.graphics.print("Loading...", 5, 460)
+            love.graphics.print("Loading...", 5, love.graphics:getHeight() - 20)
             love.graphics.present()
-            if option <= debugoptions then
+            if option <= debugoptions then               
                 local scene
-				if option == 2 then
-					scene = require "assets.scenes.game_over" ()
-				else
-					scene = require "assets.scenes.battle" ()
-				end
-                if option == 3 then
-                    require "assets.scripts.samplebattle" (scene)
+                local optionName = scripts[option]
+                print(optionName)
+                if optionName:sub(1,1) == "*" then
+                    optionName = optionName:sub(2)
+                    print(optionName)
                 end
-                if option == 4 then
-                    require "assets.scripts.triobattle" (scene)
-                end
-                if option == 5 then
-                    require "assets.scripts.menulessbattle" (scene)
-                end
-                if option == 6 then
-                    require "assets.scripts.sixbattle" (scene)
+                if optionName:sub(1,13) == "assets.scenes" then
+                    scene = require(optionName) ()
+                elseif optionName:sub(1,14) == "assets.scripts" then
+                    scene = require("assets.scenes.battle") ()
+                    require(optionName) (scene)
                 end
                 SETSCENE(scene)
             else
@@ -158,12 +173,7 @@ SETSCENE({
         love.graphics.translate(0, -translatey)
         love.graphics.setFont(FONT "fnt_karma_big")
         love.graphics.setColor(0, 0, 0)
-        love.graphics.print("Select a mod:", 7, 10)
-        love.graphics.print("Select a mod:", 13, 10)
-        love.graphics.print("Select a mod:", 10, 7)
-        love.graphics.print("Select a mod:", 10, 13)
-        love.graphics.setColor(1, 1, 1)
-        love.graphics.print("Select a mod:", 10, 10)
+        showBoldText("Select a mod:", 7, 10)
 		if not DEBUG then
 			love.graphics.setColor(1, 1, 1, 0.5)
 			love.graphics.setFont(FONT "fnt_default")
