@@ -22,11 +22,85 @@ return function() local self = {}
     self.endingturn = false
     self.wintext = "* YOU WON!"
     self.battleisover = false
+    self.activeItems = {}
     local time = 0
+    local steptime = 0
     local attackid = 0
     local queuetime = 0
     local attackmode = false
+    local step = false
     local attackIDS = {}
+
+    if DEBUG then
+        self.items = {
+            TESTITEM = {
+                onclick = function()
+                    PLAYSOUND "snd_hurt1.wav"
+                    self.soul.hp = self.soul.hp - 1
+                    return false
+                end,
+                consume = function()
+                    return false
+                end
+            },
+            HEALITEM = {
+                onclick = function()
+                    PLAYSOUND "snd_heal_c.wav"
+                    self.soul.hp = math.min(self.soul.maxhp, self.soul.hp + 20)
+                    self.dialogue:settext("* Tastes like debug code...\n* some health was recovered.")
+                    return false
+                end,
+            },
+            ACID = {
+                onclick = function()
+                    PLAYSOUND "snd_heal_c.wav"
+                    self.soul.hp = self.soul.maxhp
+                end,
+                step = function(dt,state)
+                    print(state)
+                    if state == "menu" then
+                        if self.soul.hp > 0 then
+                            PLAYSOUND "snd_hurt1.wav"
+                            self.soul.hp = self.soul.hp - 1
+                        end
+                    end
+                end,
+            }
+        }
+    end
+    function self:getState()
+        if not self.soulislocked then
+            if self.flee then
+                return "flee"
+            elseif self.battleisover then
+                return "win"
+            else
+                return "battle"
+            end
+        elseif attackmode then
+            return "battle"
+        elseif self.endingturn then
+            return "attack"
+        else
+            return "menu"
+        end
+    end
+    function self:updatestep(dt)
+        steptime = steptime + 10 * dt
+        if steptime > 10 then
+            steptime = 0
+            step = true
+        elseif steptime > 0 then
+            step = false
+        end
+    end
+    function self:updateitems(dt)
+        for i, item in ipairs(self.activeItems) do
+            if item.step and step then
+                item.step(dt,self:getState())
+            end
+        end
+    end
     function self:onenemyturn(turncount)
         self:endattack("* Smells like flavor text")
     end
@@ -139,15 +213,34 @@ return function() local self = {}
             end)
         end)
         self:makebutton(345, 432, "item_button", "item_button_selected", nil, nil, function ()
-            self.dialogue:makechoices({
-                {
-                    text = "* heal pls (no items yet)",
-                    onclick = function()
-                        self.soul.hp = math.min(self.soul.hp + math.floor(self.soul.maxhp / 4), self.soul.maxhp)
-                        self:endturn()
-                    end
-                }
-            }, self.soul, 2)
+            if self.items then
+                local itemsChoices = {}
+                for name, item in pairs(self.items) do
+                    local itemDialogue = {
+                        menu = "item",
+                        text = "* " .. name,
+                        onclick = function()
+                            if item.onclick then
+                                if item:onclick() ~= false then
+                                    self:endturn()
+                                end
+                            else
+                                self:endturn()
+                            end
+                            if item.consume then
+                                if item:consume() ~= false then
+                                    self.items[name] = nil
+                                end
+                            else
+                                self.items[name] = nil
+                            end
+                            table.insert(self.activeItems, item)
+                        end
+                    }
+                    table.insert(itemsChoices, #itemsChoices+1, itemDialogue)
+                end
+                self.dialogue:makechoices(itemsChoices, self.soul, 2)
+            end
         end)
         self:makebutton(500, 432, "mercy_button", "mercy_button_selected", nil, nil, function ()
 			local canspare = false
@@ -186,6 +279,7 @@ return function() local self = {}
                             self.dialogue:skip()
                             self.soul:flee()
                             self.soulislocked = false
+                            self.flee = true
                         else
                             self:endturn()
                         end
@@ -203,7 +297,9 @@ return function() local self = {}
     self.music:play()
     self.music:setLooping(true)
     function self:onupdate() end
-    function self:update()
+    function self:update(dt)
+        self:updatestep(dt)
+        self:updateitems(dt)
         if self.soul.hp <= 0 then
             self.soul:update()
             return
@@ -351,7 +447,9 @@ return function() local self = {}
         love.graphics.print("Time: "..time, 0, 32)
         love.graphics.print("Mouse: "..(MOUSEX())..", "..(MOUSEY()), 0, 48)
         love.graphics.print("Attack: "..tostring(attackmode), 0, 64)
-        love.graphics.print("Box resizing: "..tostring(self.box.resizing), 0, 80)
+        love.graphics.print("Box resizing: "..tostring(self.box.resizing), 0, 64+16)
+        love.graphics.print("StepTime: "..steptime, 0, 128)
+        love.graphics.print("State: "..self:getState(), 0, 128+16)
     end
     local Attack = require "objects.attack"
     function self:makebullet(options)
