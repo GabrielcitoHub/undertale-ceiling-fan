@@ -41,6 +41,20 @@ return function(text, font, x, y, sound, texteffect) local self = {}
 		self.justswitched = true
 		return true
 	end
+	function self:removechoice(value)
+		for i, m in pairs(self.menus) do
+			for optkey, opt in pairs(m) do
+				if opt.menu == "item" and optkey == value then
+					self.menus[i][optkey] = nil
+					return true
+				end
+			end
+		end
+		return false
+	end
+	local function emptydialog()
+		print("I should fix this bug, but instead i turned it into a feature :D")
+	end
 	function self:update()
 		if not self.cantskip then
 			if ISPRESSED "CANCEL" and self.text ~= self.targettext then
@@ -133,9 +147,13 @@ return function(text, font, x, y, sound, texteffect) local self = {}
 				PLAYSOUND "snd_squeak.wav"
 			end
 			if ISPRESSED "SELECT" and not self.justswitched then
-				PLAYSOUND "snd_select.wav"
-				if option.onclick then
-					option.onclick(optionindex)
+				if option then
+					PLAYSOUND "snd_select.wav"
+					if option.onclick then
+						option.onclick(optionindex)
+					end
+				else
+					emptydialog()
 				end
 			end
 			if menu.soul then
