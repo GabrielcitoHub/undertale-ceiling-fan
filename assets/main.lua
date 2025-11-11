@@ -5,6 +5,7 @@ local debugoptions = 0
 local minopiton = 1
 local translatey = 0
 local brightnesstimer = 0
+local updater = require "objects.updater" ()
 local function loadDebugFilesFromPath(path)
     local items = love.filesystem.getDirectoryItems(path)
     for _,item in pairs(items) do
@@ -167,7 +168,7 @@ SETSCENE({
         end
         if listempty then
             love.graphics.setColor(1, 1, 1, 0.3)
-            love.graphics.print("- No mods installed -\n- Press C to open folder -", 60, 120)
+            love.graphics.print("- No mods installed -\n- Press" .. string.upper(GETKEY "SELECT") .. "to open folder -", 60, 120)
             option = 2
         end
         love.graphics.translate(0, -translatey)
@@ -177,8 +178,8 @@ SETSCENE({
 		if not DEBUG then
 			love.graphics.setColor(1, 1, 1, 0.5)
 			love.graphics.setFont(FONT "fnt_default")
-			love.graphics.print("Press F3 to toggle DEBUG MODE", 4, 464)
-			love.graphics.print("Press C to open mods folder", 420, 464)
+			love.graphics.print("Press " .. string.upper(GETKEY "EXTRA1") .. " to toggle DEBUG MODE", 4, 464)
+			love.graphics.print("Press " .. string.upper(GETKEY "MENU") .. " to open mods folder", 420, 464)
 		end
     end,
     debugdraw = function(self)
@@ -187,5 +188,6 @@ SETSCENE({
         love.graphics.print("DEBUG MODE", 0, 464)
         love.graphics.print("Option: "..option, 200, 464)
         love.graphics.print("Translate Y: "..string.format("%f", translatey), 400, 464)
+        updater:draw()
     end
 })
