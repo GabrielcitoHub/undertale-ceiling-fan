@@ -47,7 +47,10 @@ return function() local self = {}
                 onclick = function()
                     PLAYSOUND "snd_heal_c.wav"
                     self.soul.hp = math.min(self.soul.maxhp, self.soul.hp + 20)
-                    self.dialogue:settext("* Tastes like debug code...\n* some health was recovered.")
+                    self:endturn({
+                        "* Tastes like debug code...",
+                        "* Some health was recovered."
+                    })
                     return false
                 end,
             },
@@ -65,6 +68,25 @@ return function() local self = {}
                         end
                     end
                 end,
+            },
+            ["Special Acid"] = {
+                consumeitem = true,
+                onclick = function()
+                    PLAYSOUND "snd_laz.wav"
+                    for i,opp in pairs(self.opponents) do
+                        if opp.hp < 10 then
+                            opp.hp = opp.hp - 10
+                            self.consumeitem = true
+                        else
+                            opp.hp = opp.hp - opp.maxhp / 10
+                            self.consumeitem = false
+                        end
+                    end
+                    self:postattack()
+                end,
+                consume = function()
+                    return self.consumeitem
+                end
             }
         }
     end
@@ -448,8 +470,8 @@ return function() local self = {}
         love.graphics.print("Mouse: "..(MOUSEX())..", "..(MOUSEY()), 0, 48)
         love.graphics.print("Attack: "..tostring(attackmode), 0, 64)
         love.graphics.print("Box resizing: "..tostring(self.box.resizing), 0, 64+16)
-        love.graphics.print("StepTime: "..steptime, 0, 128)
-        love.graphics.print("State: "..self:getState(), 0, 128+16)
+        love.graphics.print("StepTime: "..steptime, 0, 64+32)
+        love.graphics.print("State: "..self:getState(), 0, 64+32+16)
     end
     local Attack = require "objects.attack"
     function self:makebullet(options)
