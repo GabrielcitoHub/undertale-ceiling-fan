@@ -43,6 +43,7 @@ return function() local self = {}
         self:updatebuttons(dt)
     end
     function self:draw()
+        love.graphics.setFont(FONT "fnt_default")
         self:drawbuttons()
     end
     --Utils functions
