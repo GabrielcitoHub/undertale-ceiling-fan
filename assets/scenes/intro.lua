@@ -227,13 +227,33 @@ return function() local self = {}
             self.dialogue:print("Name the fallen human.",x+110,y+40)
             showGrid(self.grid)
             love.graphics.setColor(1,1,1)
-            love.graphics.printf(self.name,x+220,y+70,640/4,"left",0,1,1)
+            local limit = 640/4
+            love.graphics.printf(self.name,x+220,y+70,limit,"justify",0,1,1)
+            local startLow = 120
+            local i = 1
+            while string.len(self.name) > startLow do
+                startLow = startLow + 120
+                if i > 1 then
+                    startLow = startLow + 30
+                end
+                if i == 1 then
+                    startLow = 121
+                end
+                local cutName = string.sub(self.name,startLow+1)
+                local cutX = 220-(10*i)
+                local cutY = 0
+                if cutX < 0 then
+                    cutX = 640-(10*(i-1))
+                end
+                love.graphics.printf(cutName,x+cutX,cutY,limit,"justify",0,1,1)
+                i = i + 1
+            end
             checkName()
         end
     end
     function self:debugdraw()
         love.graphics.setFont(FONT "fnt_default")
         love.graphics.setColor(1,1,1)
-		love.graphics.print("Menu "..self.menu.."\nReal: "..self.real.."\nTimer: "..self.timer.."\nPosition: "..self.position[1]..","..self.position[2].."\nName: "..self.name)
+		love.graphics.print("Menu "..self.menu.."\nReal: "..self.real.."\nTimer: "..self.timer.."\nPosition: "..self.position[1]..","..self.position[2].."\nName: "..self.name.."\nNameLen: "..string.len(self.name))
 	end
 return self end
