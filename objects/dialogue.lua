@@ -8,6 +8,7 @@ return function(text, font, x, y, sound, texteffect) local self = {}
 	end
 	self.font = FONT(font or "fnt_default_big")
 	self.sound = sound or "SND_TXT2.wav"
+	self.defaultsound = self.sound
 	self.targettext = text or ""
 	self.speed = 1
 	self.x = x or 50
@@ -187,7 +188,12 @@ return function(text, font, x, y, sound, texteffect) local self = {}
 		end
 	end
 	function self:draw()
-		self:print(self.text, self.x, self.y)
+		local x,y = self.x,self.y
+		if self.potrait and self.targettext ~= "" and self.targettext ~= nil then
+			love.graphics.draw(self.potrait,x,y,0,2,2)
+			x = x + self.potrait:getWidth() + 48
+		end
+		self:print(self.text, x, y)
 		if #self.menus > 0 then
 			local menu = self.menus[#self.menus]
 			local maxperpage = menu.options
@@ -217,5 +223,22 @@ return function(text, font, x, y, sound, texteffect) local self = {}
 		self.text = ""
 		timer = 0
 		self.targettext = newtext
+	end
+	function self:setspeaker(speaker)
+		self.speaker = speaker
+		self:setpotrait()
+		self.sound = "voices/" .. speaker .. ".wav"
+		local path = "assets/sounds/"
+		if not love.filesystem.getInfo(path .. self.sound) then
+			self.sound = "voices/" .. speaker .. ".ogg"
+			if not love.filesystem.getInfo(path .. self.sound) then
+				self.sound = self.defaultsound
+			end
+		end
+	end
+	function self:setpotrait(face)
+		face = face or "normal"
+		local facepath = "faces/"..self.speaker.."/"..face
+		self.potrait = IMAGE(facepath)
 	end
 return self end
