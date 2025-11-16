@@ -25,5 +25,6 @@ return function() local self = {}
             love.graphics.setColor(1,1,1,msg.duration/1)
             love.graphics.print(msg.text,0,20*(i-1))
         end
+        love.graphics.setColor(1,1,1,1)
     end
 return self end
