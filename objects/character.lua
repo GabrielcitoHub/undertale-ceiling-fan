@@ -8,9 +8,9 @@ return function(x, y, soul, sprite) local self = {}
 	self.height = 30
     self.scale = 2
     self.controller = nil
-    self.speed = 3
-    self.walkspeed = self.speed * self.scale
-    self.runspeed = (self.speed * 2) * self.scale
+    self.speed = 2.8
+    self.walkspeed = self.speed
+    self.runspeed = self.speed * 1.2
     self.soul = soul or require "objects.soul" (self.x, self.y)
     self.color = {1, 1, 1}
     self.canrun = false
@@ -23,25 +23,27 @@ return function(x, y, soul, sprite) local self = {}
     function self:updatemovement(dt)
         if self.canrun then
             if ISDOWN "CANCEL" then
-                self.speed = self.runspeed * dt
+                self.speed = self.runspeed
             else
-                self.speed = self.walkspeed * dt
+                self.speed = self.walkspeed
             end
+        else
+            self.speed = self.walkspeed
         end
-        local speed = self.speed
+        local speed = self.speed * self.scale * 30
         if ISDOWN "LEFT" then
-			self.x = self.x - speed
+			self.x = self.x - speed * dt
 		end
 		if ISDOWN "RIGHT" then
-			self.x = self.x + speed
+			self.x = self.x + speed * dt
             
 		end
 		if ISDOWN "UP" then
-			self.y = self.y - speed
+			self.y = self.y - speed * dt
             
 		end
 		if ISDOWN "DOWN" then
-			self.y = self.y + speed
+			self.y = self.y + speed * dt
 		end
     end
     function self:updateanimations()
